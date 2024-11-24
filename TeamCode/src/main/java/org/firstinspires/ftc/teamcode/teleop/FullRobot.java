@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.teamcode.registry_stuff.RegistryLinearOpMode;
 
@@ -27,8 +26,11 @@ public class FullRobot extends RegistryLinearOpMode {
         if(gamepad1.left_bumper) {
             fronters.setPower(-FRONTERS_SPEED);
         }
-        if(!(gamepad1.right_bumper && gamepad1.left_bumper)) {
+        if(!gamepad1.right_bumper && !gamepad1.left_bumper) {
             fronters.setPower(0);
         }
+        telemetry.addData("Lifts Speed", lifts.getPower());
+        telemetry.addData("Fronters Speed", fronters.getPower());
+        telemetry.update();
     }
 }

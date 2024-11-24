@@ -1,12 +1,14 @@
 package org.firstinspires.ftc.teamcode.registry_stuff.registry_hardware;
 
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.CRServoImpl;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareDevice;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.ServoController;
-public class RegistrySmartServo {
-    CRServoImpl servo;
+
+public class RegistrySmartServo implements CRServo {
+    private CRServoImpl servo;
 
     public RegistrySmartServo(HardwareMap map, String name, DcMotorSimple.Direction direction) {
         try {

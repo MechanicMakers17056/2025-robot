@@ -1,71 +1,34 @@
-/*
- * Copyright (c) 2024 Phil Malone
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
+package org.firstinspires.ftc.teamcode.teleop;
 
-package org.firstinspires.ftc.robotcontroller.external.samples;
-
+import android.annotation.SuppressLint;
 import android.util.Size;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.SortOrder;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.teamcode.camera.CustomColorBlobLocatorProcessor;
+import org.firstinspires.ftc.teamcode.camera.CustomColorRange;
+import org.firstinspires.ftc.teamcode.camera.CustomImageRegion;
+import org.firstinspires.ftc.teamcode.registry_stuff.InitialableOp;
+import org.firstinspires.ftc.teamcode.registry_stuff.RegistryLinearOpMode;
 import org.firstinspires.ftc.vision.VisionPortal;
-import org.firstinspires.ftc.vision.opencv.ColorBlobLocatorProcessor;
-import org.firstinspires.ftc.vision.opencv.ColorRange;
-import org.firstinspires.ftc.vision.opencv.ImageRegion;
 import org.opencv.core.RotatedRect;
 
 import java.util.List;
 
-/*
- * This OpMode illustrates how to use a video source (camera) to locate specifically colored regions
- *
- * Unlike a "color sensor" which determines the color of an object in the field of view, this "color locator"
- * will search the Region Of Interest (ROI) in a camera image, and find any "blobs" of color that match the requested color range.
- * These blobs can be further filtered and sorted to find the one most likely to be the item the user is looking for.
- *
- * To perform this function, a VisionPortal runs a ColorBlobLocatorProcessor process.
- *   The ColorBlobLocatorProcessor process is created first, and then the VisionPortal is built to use this process.
- *   The ColorBlobLocatorProcessor analyses the ROI and locates pixels that match the ColorRange to form a "mask".
- *   The matching pixels are then collected into contiguous "blobs" of pixels.  The outer boundaries of these blobs are called its "contour".
- *   For each blob, the process then creates the smallest possible rectangle "boxFit" that will fully encase the contour.
- *   The user can then call getBlobs() to retrieve the list of Blobs, where each Blob contains the contour and the boxFit data.
- *   Note: The default sort order for Blobs is ContourArea, in descending order, so the biggest contours are listed first.
- *
- * To aid the user, a colored boxFit rectangle is drawn on the camera preview to show the location of each Blob
- * The original Blob contour can also be added to the preview.  This is helpful when configuring the ColorBlobLocatorProcessor parameters.
- *
- * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
- * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
- */
-
-//@Disabled
-@TeleOp(name = "Concept: Vision Color-Locator", group = "Concept")
-public class ConceptVisionColorLocator extends LinearOpMode
+@InitialableOp
+@TeleOp(name = "Vision Color Locator", group = "TeleOp")
+public class VisionColorLocator extends RegistryLinearOpMode
 {
+    private static final boolean showBlue = true;
+    private static final boolean showRed = true;
+    private static final boolean showYellow = true;
+
+    @SuppressLint("DefaultLocale")
     @Override
-    public void runOpMode()
+    public void runCode()
     {
         /* Build a "Color Locator" vision processor based on the ColorBlobLocatorProcessor class.
          * - Specify the color range you are looking for.  You can use a predefined color, or create you own color range
@@ -107,13 +70,36 @@ public class ConceptVisionColorLocator extends LinearOpMode
          *                                    object, such as when removing noise from an image.
          *                                    "pixels" in the range of 2-4 are suitable for low res images.
          */
-        ColorBlobLocatorProcessor colorLocator = new ColorBlobLocatorProcessor.Builder()
-                .setTargetColorRange(ColorRange.BLUE)         // use a predefined color match
-                .setContourMode(ColorBlobLocatorProcessor.ContourMode.EXTERNAL_ONLY)    // exclude blobs inside blobs
-                .setRoi(ImageRegion.asUnityCenterCoordinates(-0.5, 0.5, 0.5, -0.5))  // search central 1/4 of camera view
-                .setDrawContours(true)                        // Show contours on the Stream Preview
+        CustomColorBlobLocatorProcessor blueColorLocator = new CustomColorBlobLocatorProcessor.Builder()
+                .setTargetColorRange(CustomColorRange.BLUE)         // use a predefined color match
+                .setContourMode(CustomColorBlobLocatorProcessor.ContourMode.EXTERNAL_ONLY)    // exclude blobs inside blobs
+//                .setRoi(ImageRegion.asUnityCenterCoordinates(-0.5, 0.5, 0.5, -0.5))  // search central 1/4 of camera view
+                .setRoi(CustomImageRegion.entireFrame())  // search central 1/4 of camera view
+                .setDrawContours(true)    // Show contours on the Stream Preview
+                .setShowCenter(true)
                 .setBlurSize(5)                               // Smooth the transitions between different colors in image
                 .build();
+
+        CustomColorBlobLocatorProcessor redColorLocator = new CustomColorBlobLocatorProcessor.Builder()
+                .setTargetColorRange(CustomColorRange.RED)         // use a predefined color match
+                .setContourMode(CustomColorBlobLocatorProcessor.ContourMode.EXTERNAL_ONLY)    // exclude blobs inside blobs
+//                .setRoi(ImageRegion.asUnityCenterCoordinates(-0.5, 0.5, 0.5, -0.5))  // search central 1/4 of camera view
+                .setRoi(CustomImageRegion.entireFrame())  // search central 1/4 of camera view
+                .setDrawContours(false)    // Show contours on the Stream Preview
+                .setShowCenter(true)
+                .setBlurSize(5)                               // Smooth the transitions between different colors in image
+                .build();
+
+        CustomColorBlobLocatorProcessor yellowColorLocator = new CustomColorBlobLocatorProcessor.Builder()
+                .setTargetColorRange(CustomColorRange.YELLOW)         // use a predefined color match
+                .setContourMode(CustomColorBlobLocatorProcessor.ContourMode.EXTERNAL_ONLY)    // exclude blobs inside blobs
+//                .setRoi(ImageRegion.asUnityCenterCoordinates(-0.5, 0.5, 0.5, -0.5))  // search central 1/4 of camera view
+                .setRoi(CustomImageRegion.entireFrame())  // search central 1/4 of camera view
+                .setDrawContours(false)    // Show contours on the Stream Preview
+                .setShowCenter(true)
+                .setBlurSize(5)                               // Smooth the transitions between different colors in image
+                .build();
+
 
         /*
          * Build a vision portal to run the Color Locator process.
@@ -127,11 +113,18 @@ public class ConceptVisionColorLocator extends LinearOpMode
          *  or
          *      .setCamera(BuiltinCameraDirection.BACK)    ... for a Phone Camera
          */
-        VisionPortal portal = new VisionPortal.Builder()
-                .addProcessor(colorLocator)
+        VisionPortal.Builder portalBuilder = new VisionPortal.Builder()
                 .setCameraResolution(new Size(320, 240))
-                .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
-                .build();
+                .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"));
+
+        if(showBlue)
+            portalBuilder.addProcessor(blueColorLocator);
+        if (showRed)
+            portalBuilder.addProcessor(redColorLocator);
+        if(showYellow)
+            portalBuilder.addProcessor(yellowColorLocator);
+
+        portalBuilder.build();
 
         telemetry.setMsTransmissionInterval(50);   // Speed up telemetry updates, Just use for debugging.
         telemetry.setDisplayFormat(Telemetry.DisplayFormat.MONOSPACE);
@@ -139,10 +132,12 @@ public class ConceptVisionColorLocator extends LinearOpMode
         // WARNING:  To be able to view the stream preview on the Driver Station, this code runs in INIT mode.
         while (opModeIsActive() || opModeInInit())
         {
-            telemetry.addData("preview on/off", "... Camera Stream\n");
+//            telemetry.addData("preview on/off", "... Camera Stream\n");
 
             // Read the current list
-            List<ColorBlobLocatorProcessor.Blob> blobs = colorLocator.getBlobs();
+            List<CustomColorBlobLocatorProcessor.Blob> blueBlobs = blueColorLocator.getBlobs();
+            List<CustomColorBlobLocatorProcessor.Blob> redBlobs = redColorLocator.getBlobs();
+            List<CustomColorBlobLocatorProcessor.Blob> yellowBlobs = yellowColorLocator.getBlobs();
 
             /*
              * The list of Blobs can be filtered to remove unwanted Blobs.
@@ -164,7 +159,19 @@ public class ConceptVisionColorLocator extends LinearOpMode
              *   A blob's Aspect ratio is the ratio of boxFit long side to short side.
              *   A perfect Square has an aspect ratio of 1.  All others are > 1
              */
-            ColorBlobLocatorProcessor.Util.filterByArea(50, 20000, blobs);  // filter out very small blobs.
+            CustomColorBlobLocatorProcessor.Util.filterByArea(600, 10000, blueBlobs);  // filter out very small blobs.
+            CustomColorBlobLocatorProcessor.Util.filterByArea(600, 10000, redBlobs);  // filter out very small blobs.
+            CustomColorBlobLocatorProcessor.Util.filterByArea(600, 10000, yellowBlobs);  // filter out very small blobs.
+
+            CustomColorBlobLocatorProcessor.Util.sortByArea(SortOrder.ASCENDING, blueBlobs);
+            CustomColorBlobLocatorProcessor.Util.sortByArea(SortOrder.ASCENDING, redBlobs);
+            CustomColorBlobLocatorProcessor.Util.sortByDensity(SortOrder.ASCENDING, yellowBlobs);
+
+//            CustomColorBlobLocatorProcessor.Util.filterByAspectRatio(1.8, 2.2, blueBlobs);  // filter out very small blobs.
+//            CustomColorBlobLocatorProcessor.Util.filterByAspectRatio(1.8, 2.2, redBlobs);  // filter out very small blobs.
+//            CustomColorBlobLocatorProcessor.Util.filterByAspectRatio(1.8, 2.2, yellowBlobs);  // filter out very small blobs.
+
+//            CustomColorBlobLocatorProcessor.Util.filterByAspectRatio(200, 10000, yellowBlobs);  // filter out very small blobs.
 
             /*
              * The list of Blobs can be sorted using the same Blob attributes as listed above.
@@ -174,18 +181,34 @@ public class ConceptVisionColorLocator extends LinearOpMode
              *     ColorBlobLocatorProcessor.Util.sortByAspectRatio(SortOrder.DESCENDING, blobs);
              */
 
-            telemetry.addLine(" Area Density Aspect  Center");
+//            telemetry.addLine(" Area Density Aspect  Center");
 
             // Display the size (area) and center location for each Blob.
-            for(ColorBlobLocatorProcessor.Blob b : blobs)
-            {
-                RotatedRect boxFit = b.getBoxFit();
-                telemetry.addLine(String.format("%5d  %4.2f   %5.2f  (%3d,%3d)",
-                          b.getContourArea(), b.getDensity(), b.getAspectRatio(), (int) boxFit.center.x, (int) boxFit.center.y));
-            }
+            showDataFor(blueBlobs, "Blue");
+            showDataFor(redBlobs, "Red");
+            showDataFor(yellowBlobs, "Yellow");
+
 
             telemetry.update();
             sleep(50);
+        }
+    }
+
+    @SuppressLint("DefaultLocale")
+    private void showDataFor(List<CustomColorBlobLocatorProcessor.Blob> blobs, String color) {
+        // Display the size (area) and center location for each Blob.
+        if(!blobs.isEmpty())
+            telemetry.addLine(color + " Sample: ");
+        for(CustomColorBlobLocatorProcessor.Blob b : blobs)
+        {
+            RotatedRect boxFit = b.getBoxFit();
+//            telemetry.addLine(String.format("%5d  %4.2f   %5.2f  (%3d,%3d)",
+//                    b.getContourArea(), b.getDensity(), b.getAspectRatio(), (int) boxFit.center.x, (int) boxFit.center.y));
+            telemetry.addLine(String.format("- Center: (%3d,%3d)",
+                    (int) boxFit.center.x, (int) boxFit.center.y));
+
+            telemetry.addLine(String.format("- Angle: %s",
+                    (int) boxFit.angle));
         }
     }
 }

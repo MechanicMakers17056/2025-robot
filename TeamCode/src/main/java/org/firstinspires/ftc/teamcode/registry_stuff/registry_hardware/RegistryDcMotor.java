@@ -117,7 +117,7 @@ public class RegistryDcMotor implements DcMotor {
 
     @Override
     public Direction getDirection() {
-        return motor.getDirection();
+        return motor == null ? Direction.FORWARD : motor.getDirection();
     }
 
     @Override

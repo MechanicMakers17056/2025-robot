@@ -21,10 +21,10 @@ public class EncoderDrive extends AutonomousRegistryLinearOpMode {
     // This is gearing DOWN for less speed and more torque.
     // For gearing UP, use a gear ratio less than 1.0. Note this will affect the direction of wheel rotation.
     static final double COUNTS_PER_MOTOR_REV = 537.6; // eg: TETRIX Motor Encoder
-    static final double DRIVE_GEAR_REDUCTION = 1.0;  // No External Gearing.
-    static final double WHEEL_DIAMETER_CM = 4.1; // For figuring circumference
+    static final double DRIVE_GEAR_REDUCTION = 1.5;  // No External Gearing.
+    static final double WHEEL_DIAMETER_INCH = 4; // For figuring circumference
     static final double COUNTS_PER_CM = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
-            (WHEEL_DIAMETER_CM * 3.1415);
+            (WHEEL_DIAMETER_INCH * 3.1415);
     static final double DRIVE_SPEED = 0.6;
     static final double TURN_SPEED = 0.5;
 
@@ -36,8 +36,8 @@ public class EncoderDrive extends AutonomousRegistryLinearOpMode {
 
     @Override
     public void runCode() {
-        encoderDrive(Direction.FORWARD, DRIVE_SPEED, 20, 5.0);
-        encoderDrive(Direction.BACKWARD, DRIVE_SPEED, 10, 4.0);
+        encoderDrive(Direction.FORWARD, DRIVE_SPEED, 40, 5.0);
+//        encoderDrive(Direction.BACKWARD, DRIVE_SPEED, 10, 4.0);
 
         telemetry.addData("Path", "Complete");
         telemetry.update();
@@ -74,10 +74,14 @@ public class EncoderDrive extends AutonomousRegistryLinearOpMode {
                 (frontLeftDrive.isBusy() && frontRightDrive.isBusy()
                         && rearLeftDrive.isBusy() && rearRightDrive.isBusy())) {
             // Display it for the driver.
-//            telemetry.addData("Running to", " %7d :%7d", newLeftTarget, newRightTarget);
-//            telemetry.addData("Currently at", " at %7d :%7d",
-//                    leftDrive.getCurrentPosition(), rightDrive.getCurrentPosition());
-            telemetry.addLine("Test!");
+            telemetry.addData("Front Left",
+                    frontLeftDrive.getCurrentPosition());
+            telemetry.addData("Rear Left",
+                    rearLeftDrive.getCurrentPosition());
+            telemetry.addData("Front Right",
+                    frontRightDrive.getCurrentPosition());
+            telemetry.addData("Rear Right",
+                    rearRightDrive.getCurrentPosition());
             telemetry.update();
         }
 
@@ -101,7 +105,7 @@ public class EncoderDrive extends AutonomousRegistryLinearOpMode {
         switch (direction) {
             case FORWARD:
                 for (RegistryDcMotor motor : Stops.WHEELS.motorList) {
-                    motor.setPower(getDesiredPosition(motor, distance));
+                    motor.setTargetPosition(getDesiredPosition(motor, distance));
                 }
                 break;
             case BACKWARD:
@@ -133,7 +137,11 @@ public class EncoderDrive extends AutonomousRegistryLinearOpMode {
 
         // reset the timeout time and start motion.
         runtime.reset();
-        runMotors(Math.abs(speed), Math.abs(speed), Math.abs(speed), Math.abs(speed));
+        runMotors(
+                runtime.milliseconds() > 250 ? 0.1 : Math.abs(speed),
+                runtime.milliseconds() > 250 ? 0.1 : Math.abs(speed),
+                runtime.milliseconds() > 250 ? 0.1 : Math.abs(speed),
+                runtime.milliseconds() > 250 ? 0.1 : Math.abs(speed));
 
         // keep looping while we are still active, and there is time left, and both motors are running.
         // Note: We use (isBusy() && isBusy()) in the loop test, which means that when EITHER motor hits
@@ -145,10 +153,14 @@ public class EncoderDrive extends AutonomousRegistryLinearOpMode {
                 (frontLeftDrive.isBusy() && frontRightDrive.isBusy()
                         && rearLeftDrive.isBusy() && rearRightDrive.isBusy())) {
             // Display it for the driver.
-//            telemetry.addData("Running to", " %7d :%7d", newLeftTarget, newRightTarget);
-//            telemetry.addData("Currently at", " at %7d :%7d",
-//                    leftDrive.getCurrentPosition(), rightDrive.getCurrentPosition());
-            telemetry.addLine("Test!");
+            telemetry.addData("Front Left",
+                    frontLeftDrive.getCurrentPosition());
+            telemetry.addData("Rear Left",
+                    rearLeftDrive.getCurrentPosition());
+            telemetry.addData("Front Right",
+                    frontRightDrive.getCurrentPosition());
+            telemetry.addData("Rear Right",
+                    rearRightDrive.getCurrentPosition());
             telemetry.update();
         }
 //        if (

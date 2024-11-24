@@ -112,7 +112,7 @@ public class RegistryDualMotor implements DcMotor {
 
     @Override
     public Direction getDirection() {
-        return getSelectedMotor().getDirection();
+        return getSelectedMotor() == null ? Direction.FORWARD : getSelectedMotor().getDirection();
     }
 
     @Override
