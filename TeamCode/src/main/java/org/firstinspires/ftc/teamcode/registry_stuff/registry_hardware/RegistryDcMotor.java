@@ -121,9 +121,9 @@ public class RegistryDcMotor implements DcMotor {
     }
 
     @Override
-    public void setPower(double v) {
+    public void setPower(double power) {
         if (motor != null)
-            motor.setPower(v);
+            motor.setPower(power);
     }
 
     @Override

@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.teleop;
 import androidx.core.math.MathUtils;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -24,7 +25,7 @@ public class Moving extends RegistryLinearOpMode {
     private static final PressAndReleaseButton toggleableBumper = new PressAndReleaseButton();
 
     public void runCode() {
-        speed(gamepad1, true);
+        speed(gamepad1, gamepad1.right_bumper);
 
         double frontLeftPower = frontLeftDrive.getPower();
         double frontRightPower = frontRightDrive.getPower();
@@ -43,12 +44,11 @@ public class Moving extends RegistryLinearOpMode {
         return new DecimalFormat(format).format(speed);
     }
 
-    public static void speed(Gamepad gamepad, boolean shouldReverse) {
-        if(shouldReverse)
-            toggleableBumper.tick(gamepad.right_bumper, () -> {
-                reverse = !reverse;
-                gamepad.rumble(100);
-            });
+    public static void speed(Gamepad gamepad, boolean reverseButton) {
+        toggleableBumper.tick(reverseButton, () -> {
+            reverse = !reverse;
+            gamepad.rumble(100);
+        });
 
         double y = (reverse ? -1 : 1) * gamepad.left_stick_y;
         double x = (reverse ? -1 : 1) * gamepad.left_stick_x;

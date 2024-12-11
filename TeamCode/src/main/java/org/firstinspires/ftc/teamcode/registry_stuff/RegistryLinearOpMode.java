@@ -1,9 +1,10 @@
 package org.firstinspires.ftc.teamcode.registry_stuff;
 
+import static org.firstinspires.ftc.teamcode.registry_stuff.RegistryUtils.initCRServo;
 import static org.firstinspires.ftc.teamcode.registry_stuff.RegistryUtils.initMotor;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Gamepad;
@@ -12,23 +13,25 @@ import com.qualcomm.robotcore.hardware.TouchSensor;
 import org.firstinspires.ftc.teamcode.enums.Colors;
 import org.firstinspires.ftc.teamcode.enums.Direction;
 import org.firstinspires.ftc.teamcode.enums.Stops;
+import org.firstinspires.ftc.teamcode.registry_stuff.registry_hardware.RegistryCRServo;
 import org.firstinspires.ftc.teamcode.registry_stuff.registry_hardware.RegistryDcMotor;
 import org.firstinspires.ftc.teamcode.registry_stuff.registry_hardware.RegistryDualMotor;
-
-import java.lang.annotation.Annotation;
 
 // Abstract class that serves as a base for linear op modes with common robot components such as basic movement methods and it also used to give access to all
 // motors, sensors and servos in all subclasses without needing to copy them for each one and avoid repetitiveness
 public abstract class RegistryLinearOpMode extends LinearOpMode {
     // Declare motors, servos and sensors
+    public static RegistryDcMotor encoderMotor;
     public static RegistryDcMotor frontLeftDrive;
     public static RegistryDcMotor frontRightDrive;
     public static RegistryDcMotor rearLeftDrive;
     public static RegistryDcMotor rearRightDrive;
     public static RegistryDualMotor lifts;
     public static RegistryDualMotor fronters;
+    public static RegistryCRServo rightServo;
+    public static RegistryCRServo leftServo;
+    public static AnalogInput encoder;
 //    public static RegistrySmartServo servo;
-    public static CRServo servo;
     public static TouchSensor magnet;
     //    public static RegistryDcMotor lift1;
 //    public static RegistryDcMotor lift2;
@@ -36,7 +39,6 @@ public abstract class RegistryLinearOpMode extends LinearOpMode {
 //    public static RegistryDcMotor rotationCling;
 //    public static RegistryServo clawRight;
 //    public static RegistryServo clawLeft;
-    public final static int LIFT_MAX_POSITION = 1900;
 
     // Method used to call the initialization of all motors, sensors, and servos because the hardwareMap is set only when the Op Mode has began to run
     // it is also used to run the code provided by the subclasses (runCode)
@@ -73,6 +75,9 @@ public abstract class RegistryLinearOpMode extends LinearOpMode {
                 initMotor("l2"));
         fronters = new RegistryDualMotor(hardwareMap, initMotor("f1", DcMotorSimple.Direction.REVERSE),
                 initMotor("f2"));
+        rightServo = initCRServo("rs", DcMotorSimple.Direction.FORWARD);
+        leftServo = initCRServo("ls", DcMotorSimple.Direction.REVERSE);
+        encoder = hardwareMap.get(AnalogInput.class, "encoder");
 //        servo = initSmartServo("ss");
 //        servo = hardwareMap.get(CRServo.class, "ss");
 //        magnet = hardwareMap.get(TouchSensor.class, "ms");

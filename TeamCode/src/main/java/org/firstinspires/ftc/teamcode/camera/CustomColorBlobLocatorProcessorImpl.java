@@ -32,8 +32,7 @@ import org.opencv.imgproc.Imgproc;
 import java.util.ArrayList;
 import java.util.List;
 
-class CustomColorBlobLocatorProcessorImpl extends CustomColorBlobLocatorProcessor implements VisionProcessor
-{
+class CustomColorBlobLocatorProcessorImpl extends CustomColorBlobLocatorProcessor implements VisionProcessor {
     private CustomColorRange colorRange;
     private CustomImageRegion roiImg;
     private Rect roi;
@@ -65,9 +64,8 @@ class CustomColorBlobLocatorProcessorImpl extends CustomColorBlobLocatorProcesso
     private volatile ArrayList<Blob> userBlobs = new ArrayList<>();
 
     CustomColorBlobLocatorProcessorImpl(CustomColorRange colorRange, CustomImageRegion roiImg, ContourMode contourMode,
-                                  int erodeSize, int dilateSize, boolean drawContours, boolean showCenter, int blurSize,
-                                  @ColorInt int boundingBoxColor, @ColorInt int roiColor, @ColorInt int contourColor)
-    {
+                                        int erodeSize, int dilateSize, boolean drawContours, boolean showCenter, int blurSize,
+                                        @ColorInt int boundingBoxColor, @ColorInt int roiColor, @ColorInt int contourColor) {
         this.colorRange = colorRange;
         this.roiImg = roiImg;
         this.drawContours = drawContours;
@@ -76,40 +74,28 @@ class CustomColorBlobLocatorProcessorImpl extends CustomColorBlobLocatorProcesso
         this.roiColor = roiColor;
         this.contourColor = contourColor;
 
-        if (blurSize > 0)
-        {
+        if (blurSize > 0) {
             // enforce Odd blurSize
             blurElement = new Size(blurSize | 0x01, blurSize | 0x01);
-        }
-        else
-        {
+        } else {
             blurElement = null;
         }
 
-        if (contourMode == ContourMode.EXTERNAL_ONLY)
-        {
+        if (contourMode == ContourMode.EXTERNAL_ONLY) {
             contourCode = Imgproc.RETR_EXTERNAL;
-        }
-        else
-        {
+        } else {
             contourCode = Imgproc.RETR_LIST;
         }
 
-        if (erodeSize > 0)
-        {
+        if (erodeSize > 0) {
             erodeElement = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(erodeSize, erodeSize));
-        }
-        else
-        {
+        } else {
             erodeElement = null;
         }
 
-        if (dilateSize > 0)
-        {
+        if (dilateSize > 0) {
             dilateElement = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(dilateSize, dilateSize));
-        }
-        else
-        {
+        } else {
             dilateElement = null;
         }
 
@@ -129,8 +115,7 @@ class CustomColorBlobLocatorProcessorImpl extends CustomColorBlobLocatorProcesso
     }
 
     @Override
-    public void init(int width, int height, CameraCalibration calibration)
-    {
+    public void init(int width, int height, CameraCalibration calibration) {
         frameWidth = width;
         frameHeight = height;
 
@@ -138,41 +123,31 @@ class CustomColorBlobLocatorProcessorImpl extends CustomColorBlobLocatorProcesso
     }
 
     @Override
-    public Object processFrame(Mat frame, long captureTimeNanos)
-    {
-        if (roiMat == null)
-        {
+    public Object processFrame(Mat frame, long captureTimeNanos) {
+        if (roiMat == null) {
             roiMat = frame.submat(roi);
             roiMat_userColorSpace = roiMat.clone();
         }
 
-        if (colorRange.colorSpace == ColorSpace.YCrCb)
-        {
+        if (colorRange.colorSpace == ColorSpace.YCrCb) {
             Imgproc.cvtColor(roiMat, roiMat_userColorSpace, Imgproc.COLOR_RGB2YCrCb);
-        }
-        else if (colorRange.colorSpace == ColorSpace.HSV)
-        {
+        } else if (colorRange.colorSpace == ColorSpace.HSV) {
             Imgproc.cvtColor(roiMat, roiMat_userColorSpace, Imgproc.COLOR_RGB2HSV);
-        }
-        else if (colorRange.colorSpace == ColorSpace.RGB)
-        {
+        } else if (colorRange.colorSpace == ColorSpace.RGB) {
             Imgproc.cvtColor(roiMat, roiMat_userColorSpace, Imgproc.COLOR_RGBA2RGB);
         }
 
-        if (blurElement != null)
-        {
+        if (blurElement != null) {
             Imgproc.GaussianBlur(roiMat_userColorSpace, roiMat_userColorSpace, blurElement, 0);
         }
 
         Core.inRange(roiMat_userColorSpace, colorRange.min, colorRange.max, mask);
 
-        if (erodeElement != null)
-        {
+        if (erodeElement != null) {
             Imgproc.erode(mask, mask, erodeElement);
         }
 
-        if (dilateElement != null)
-        {
+        if (dilateElement != null) {
             Imgproc.dilate(mask, mask, dilateElement);
         }
 
@@ -182,19 +157,15 @@ class CustomColorBlobLocatorProcessorImpl extends CustomColorBlobLocatorProcesso
         hierarchy.release();
 
         ArrayList<Blob> blobs = new ArrayList<>();
-        for (MatOfPoint contour : contours)
-        {
+        for (MatOfPoint contour : contours) {
             Core.add(contour, new Scalar(roi.x, roi.y), contour);
-            blobs.add(new CustomColorBlobLocatorProcessorImpl.BlobImpl(contour));
+            blobs.add(new BlobImpl(contour));
         }
 
         // Apply filters.
-        synchronized (lockFilters)
-        {
-            for (BlobFilter filter : filters)
-            {
-                switch (filter.criteria)
-                {
+        synchronized (lockFilters) {
+            for (BlobFilter filter : filters) {
+                switch (filter.criteria) {
                     case BY_CONTOUR_AREA:
                         Util.filterByArea(filter.minValue, filter.maxValue, blobs);
                         break;
@@ -210,10 +181,8 @@ class CustomColorBlobLocatorProcessorImpl extends CustomColorBlobLocatorProcesso
 
         // Apply sorting.
         BlobSort sort = this.sort; // Put the field into a local variable for thread safety.
-        if (sort != null)
-        {
-            switch (sort.criteria)
-            {
+        if (sort != null) {
+            switch (sort.criteria) {
                 case BY_CONTOUR_AREA:
                     Util.sortByArea(sort.sortOrder, blobs);
                     break;
@@ -224,9 +193,7 @@ class CustomColorBlobLocatorProcessorImpl extends CustomColorBlobLocatorProcesso
                     Util.sortByAspectRatio(sort.sortOrder, blobs);
                     break;
             }
-        }
-        else
-        {
+        } else {
             // Apply a default sort by area
             Util.sortByArea(SortOrder.DESCENDING, blobs);
         }
@@ -237,35 +204,8 @@ class CustomColorBlobLocatorProcessorImpl extends CustomColorBlobLocatorProcesso
         return blobs;
     }
 
-    public static Mat adjustSaturation(Mat inputImage, double scale) {
-        // Convert BGR image to HSV
-        Mat hsvImage = new Mat();
-        Imgproc.cvtColor(inputImage, hsvImage, Imgproc.COLOR_BGR2HSV);
-
-        // Split HSV channels
-        List<Mat> hsvChannels = new ArrayList<>();
-        Core.split(hsvImage, hsvChannels);
-
-        // Adjust the saturation channel (channel index 1 is Saturation)
-        Mat saturation = hsvChannels.get(1);
-        saturation.convertTo(saturation, CvType.CV_32F); // Use float for scaling
-        Core.multiply(saturation, new Scalar(scale), saturation); // Scale saturation
-        Core.min(saturation, new Scalar(255), saturation); // Cap values at 255
-        Core.max(saturation, new Scalar(0), saturation);   // Ensure no negative values
-        saturation.convertTo(saturation, CvType.CV_8U);   // Convert back to 8-bit
-
-        // Merge channels back and convert to BGR
-        hsvChannels.set(1, saturation); // Replace the saturation channel
-        Core.merge(hsvChannels, hsvImage);
-        Mat outputImage = new Mat();
-        Imgproc.cvtColor(hsvImage, outputImage, Imgproc.COLOR_HSV2BGR);
-
-        return outputImage;
-    }
-
     @Override
-    public void onDrawFrame(Canvas canvas, int onscreenWidth, int onscreenHeight, float scaleBmpPxToCanvasPx, float scaleCanvasDensity, Object userContext)
-    {
+    public void onDrawFrame(Canvas canvas, int onscreenWidth, int onscreenHeight, float scaleBmpPxToCanvasPx, float scaleCanvasDensity, Object userContext) {
         ArrayList<Blob> blobs = (ArrayList<Blob>) userContext;
 
         contourPaint.setStrokeWidth(scaleCanvasDensity * 4);
@@ -274,17 +214,14 @@ class CustomColorBlobLocatorProcessorImpl extends CustomColorBlobLocatorProcesso
 
         android.graphics.Rect gfxRect = makeGraphicsRect(roi, scaleBmpPxToCanvasPx);
 
-        for (Blob blob : blobs)
-        {
-            if (drawContours)
-            {
+        for (Blob blob : blobs) {
+            if (drawContours) {
                 Path path = new Path();
 
                 Point[] contourPts = blob.getContourPoints();
 
-                path.moveTo((float) (contourPts[0].x) * scaleBmpPxToCanvasPx, (float)(contourPts[0].y) * scaleBmpPxToCanvasPx);
-                for (int i = 1; i < contourPts.length; i++)
-                {
+                path.moveTo((float) (contourPts[0].x) * scaleBmpPxToCanvasPx, (float) (contourPts[0].y) * scaleBmpPxToCanvasPx);
+                for (int i = 1; i < contourPts.length; i++) {
                     path.lineTo((float) (contourPts[i].x) * scaleBmpPxToCanvasPx, (float) (contourPts[i].y) * scaleBmpPxToCanvasPx);
                 }
                 path.close();
@@ -309,11 +246,10 @@ class CustomColorBlobLocatorProcessorImpl extends CustomColorBlobLocatorProcesso
             Point[] rotRectPts = new Point[4];
             blob.getBoxFit().points(rotRectPts);
 
-            for(int i = 0; i < 4; ++i)
-            {
+            for (int i = 0; i < 4; ++i) {
                 canvas.drawLine(
-                        (float) (rotRectPts[i].x)*scaleBmpPxToCanvasPx, (float) (rotRectPts[i].y)*scaleBmpPxToCanvasPx,
-                        (float) (rotRectPts[(i+1)%4].x)*scaleBmpPxToCanvasPx, (float) (rotRectPts[(i+1)%4].y)*scaleBmpPxToCanvasPx,
+                        (float) (rotRectPts[i].x) * scaleBmpPxToCanvasPx, (float) (rotRectPts[i].y) * scaleBmpPxToCanvasPx,
+                        (float) (rotRectPts[(i + 1) % 4].x) * scaleBmpPxToCanvasPx, (float) (rotRectPts[(i + 1) % 4].y) * scaleBmpPxToCanvasPx,
                         boundingRectPaint
                 );
             }
@@ -325,8 +261,7 @@ class CustomColorBlobLocatorProcessorImpl extends CustomColorBlobLocatorProcesso
         canvas.drawLine(gfxRect.left, gfxRect.bottom, gfxRect.left, gfxRect.top, roiPaint);
     }
 
-    private android.graphics.Rect makeGraphicsRect(Rect rect, float scaleBmpPxToCanvasPx)
-    {
+    private android.graphics.Rect makeGraphicsRect(Rect rect, float scaleBmpPxToCanvasPx) {
         int left = Math.round(rect.x * scaleBmpPxToCanvasPx);
         int top = Math.round(rect.y * scaleBmpPxToCanvasPx);
         int right = left + Math.round(rect.width * scaleBmpPxToCanvasPx);
@@ -336,46 +271,37 @@ class CustomColorBlobLocatorProcessorImpl extends CustomColorBlobLocatorProcesso
     }
 
     @Override
-    public void addFilter(BlobFilter filter)
-    {
-        synchronized (lockFilters)
-        {
+    public void addFilter(BlobFilter filter) {
+        synchronized (lockFilters) {
             filters.add(filter);
         }
     }
 
     @Override
-    public void removeFilter(BlobFilter filter)
-    {
-        synchronized (lockFilters)
-        {
+    public void removeFilter(BlobFilter filter) {
+        synchronized (lockFilters) {
             filters.remove(filter);
         }
     }
 
     @Override
-    public void removeAllFilters()
-    {
-        synchronized (lockFilters)
-        {
+    public void removeAllFilters() {
+        synchronized (lockFilters) {
             filters.clear();
         }
     }
 
     @Override
-    public void setSort(BlobSort sort)
-    {
+    public void setSort(BlobSort sort) {
         this.sort = sort;
     }
 
     @Override
-    public List<Blob> getBlobs()
-    {
+    public List<Blob> getBlobs() {
         return userBlobs;
     }
 
-    class BlobImpl extends Blob
-    {
+    static class BlobImpl extends Blob {
         private MatOfPoint contour;
         private Point[] contourPts;
         private int area = -1;
@@ -383,22 +309,18 @@ class CustomColorBlobLocatorProcessorImpl extends CustomColorBlobLocatorProcesso
         private double aspectRatio = -1;
         private RotatedRect rect;
 
-        BlobImpl(MatOfPoint contour)
-        {
+        BlobImpl(MatOfPoint contour) {
             this.contour = contour;
         }
 
         @Override
-        public MatOfPoint getContour()
-        {
+        public MatOfPoint getContour() {
             return contour;
         }
 
         @Override
-        public Point[] getContourPoints()
-        {
-            if (contourPts == null)
-            {
+        public Point[] getContourPoints() {
+            if (contourPts == null) {
                 contourPts = contour.toArray();
             }
 
@@ -406,10 +328,8 @@ class CustomColorBlobLocatorProcessorImpl extends CustomColorBlobLocatorProcesso
         }
 
         @Override
-        public int getContourArea()
-        {
-            if (area < 0)
-            {
+        public int getContourArea() {
+            if (area < 0) {
                 area = Math.max(1, (int) Imgproc.contourArea(contour));  //  Fix zero area issue
             }
 
@@ -417,12 +337,10 @@ class CustomColorBlobLocatorProcessorImpl extends CustomColorBlobLocatorProcesso
         }
 
         @Override
-        public double getDensity()
-        {
+        public double getDensity() {
             Point[] contourPts = getContourPoints();
 
-            if (density < 0)
-            {
+            if (density < 0) {
                 // Compute the convex hull of the contour
                 MatOfInt hullMatOfInt = new MatOfInt();
                 Imgproc.convexHull(contour, hullMatOfInt);
@@ -434,12 +352,11 @@ class CustomColorBlobLocatorProcessorImpl extends CustomColorBlobLocatorProcesso
                 Point[] hullPoints = new Point[hullMatOfInt.rows()];
                 List<Integer> hullContourIdxList = hullMatOfInt.toList();
 
-                for (int i = 0; i < hullContourIdxList.size(); i++)
-                {
+                for (int i = 0; i < hullContourIdxList.size(); i++) {
                     hullPoints[i] = contourPts[hullContourIdxList.get(i)];
                 }
 
-                double hullArea = Math.max(1.0,Imgproc.contourArea(new MatOfPoint(hullPoints)));  //  Fix zero area issue
+                double hullArea = Math.max(1.0, Imgproc.contourArea(new MatOfPoint(hullPoints)));  //  Fix zero area issue
 
                 density = getContourArea() / hullArea;
             }
@@ -447,13 +364,11 @@ class CustomColorBlobLocatorProcessorImpl extends CustomColorBlobLocatorProcesso
         }
 
         @Override
-        public double getAspectRatio()
-        {
-            if (aspectRatio < 0)
-            {
+        public double getAspectRatio() {
+            if (aspectRatio < 0) {
                 RotatedRect r = getBoxFit();
 
-                double longSize  = Math.max(1, Math.max(r.size.width, r.size.height));
+                double longSize = Math.max(1, Math.max(r.size.width, r.size.height));
                 double shortSize = Math.max(1, Math.min(r.size.width, r.size.height));
 
                 aspectRatio = longSize / shortSize;
@@ -463,10 +378,8 @@ class CustomColorBlobLocatorProcessorImpl extends CustomColorBlobLocatorProcesso
         }
 
         @Override
-        public RotatedRect getBoxFit()
-        {
-            if (rect == null)
-            {
+        public RotatedRect getBoxFit() {
+            if (rect == null) {
                 rect = Imgproc.minAreaRect(new MatOfPoint2f(getContourPoints()));
             }
             return rect;

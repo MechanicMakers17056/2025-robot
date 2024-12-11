@@ -5,9 +5,9 @@ import com.qualcomm.robotcore.hardware.HardwareDevice;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.teamcode.registry_stuff.registry_hardware.RegistryCRServo;
 import org.firstinspires.ftc.teamcode.registry_stuff.registry_hardware.RegistryDcMotor;
 import org.firstinspires.ftc.teamcode.registry_stuff.registry_hardware.RegistryServo;
-import org.firstinspires.ftc.teamcode.registry_stuff.registry_hardware.RegistrySmartServo;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,16 +24,16 @@ public class RegistryUtils {
         return registeredDevices.get(name);
     }
 
-    public static RegistrySmartServo initSmartServo(String name) {
-        RegistrySmartServo motor = new RegistrySmartServo(map, name);
-        registeredDevices.put(name, motor);
-        return motor;
+    public static RegistryCRServo initCRServo(String name) {
+        RegistryCRServo servo = new RegistryCRServo(map, name);
+        registeredDevices.put(name, servo);
+        return servo;
     }
 
-    public static RegistrySmartServo initSmartServo(String name, DcMotorSimple.Direction direction) {
-        RegistrySmartServo motor = new RegistrySmartServo(map, name, direction);
-        registeredDevices.put(name, motor);
-        return motor;
+    public static RegistryCRServo initCRServo(String name, DcMotorSimple.Direction direction) {
+        RegistryCRServo servo = new RegistryCRServo(map, name, direction);
+        registeredDevices.put(name, servo);
+        return servo;
     }
 
     public static RegistryDcMotor initMotor(String name) {
