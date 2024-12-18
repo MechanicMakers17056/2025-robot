@@ -16,22 +16,27 @@ public class ThroughBoreEncoderTest extends RegistryLinearOpMode {
     private static final int MAX_LEFT_DEGREES = 180;
     private static final int ERROR_RANGE = 150;
 
-    private final PressAndReleaseButton triangle = new PressAndReleaseButton();
-    private final PressAndReleaseButton square = new PressAndReleaseButton();
-    private final PressAndReleaseButton circle = new PressAndReleaseButton();
+    private final PressAndReleaseButton increaseTargetAngleButton = new PressAndReleaseButton();
+    private final PressAndReleaseButton decreaseTargetAngleButton = new PressAndReleaseButton();
+    private final PressAndReleaseButton moveToAngleButton = new PressAndReleaseButton();
 
     private int targetAngle = 0;
+    private boolean shouldMoveToAngle = false;
 
     @Override
     public void runCode() {
-        square.tick(gamepad1.square, () -> targetAngle++);
-        circle.tick(gamepad1.circle, () -> targetAngle--);
-        triangle.tick(gamepad1.triangle, () -> {
-            moveToAngle(targetAngle);
-        });
+        increaseTargetAngleButton.tick(gamepad1.square, () -> targetAngle++);
+        decreaseTargetAngleButton.tick(gamepad1.circle, () -> targetAngle--);
+        moveToAngleButton.tick(gamepad1.triangle, () -> shouldMoveToAngle = !shouldMoveToAngle);
 
-        int encoderThroughMotor = getScaledAngle(encoderMotor.getCurrentPosition());
-        telemetry.addData("Rotations", encoderThroughMotor);
+        if(shouldMoveToAngle) {
+            moveToAngle(targetAngle);
+        } else {
+            encoderMotor.setPower(gamepad1.left_stick_x);
+        }
+
+        int currentAngle = getScaledAngle(encoderMotor.getCurrentPosition());
+        telemetry.addData("Rotations", currentAngle);
         telemetry.addData("Target Angle", targetAngle);
         telemetry.update();
     }
@@ -39,6 +44,7 @@ public class ThroughBoreEncoderTest extends RegistryLinearOpMode {
     private void moveToAngle(int desiredAngle) {
         int currentAngle = getScaledAngle(encoderMotor.getCurrentPosition());
         if (currentAngle == desiredAngle) {
+            shouldMoveToAngle = false;
             encoderMotor.setPower(0);
             return;
         }
@@ -50,7 +56,7 @@ public class ThroughBoreEncoderTest extends RegistryLinearOpMode {
         if (negative == 1 ? shouldMoveRight : shouldMoveLeft) {
             encoderMotor.setPower(SPEED * negative);
         } else {
-            encoderMotor.setPower((Math.abs(currentAngle) - Math.abs(desiredAngle) > ERROR_RANGE ? -SPEED : -ERROR_SPEED) * negative);
+            encoderMotor.setPower((Math.abs(Math.abs(desiredAngle) - Math.abs(currentAngle)) > ERROR_RANGE ? -SPEED : -ERROR_SPEED) * negative);
         }
     }
 
@@ -62,8 +68,13 @@ public class ThroughBoreEncoderTest extends RegistryLinearOpMode {
         return currentAngle + Math.abs(directAngle) <= Math.abs(reverseAngle) ? directAngle : reverseAngle;
     }
 
+    // converts the encoder rotations to [0, 360] format and then into a [0, 90, 180, -90] format
     private static int getScaledAngle(int angle) {
-        int actualDegrees = angle / REVOLUTION_MARGIN;
-        return actualDegrees == MAX_LEFT_DEGREES ? MAX_LEFT_DEGREES : actualDegrees % MAX_LEFT_DEGREES * (actualDegrees > MAX_LEFT_DEGREES ? -1 : 1);
+        int actualAngle = angle / REVOLUTION_MARGIN;
+        return actualAngle == MAX_LEFT_DEGREES
+                ? MAX_LEFT_DEGREES
+                : (actualAngle > MAX_LEFT_DEGREES
+                ? (MAX_LEFT_DEGREES - actualAngle % MAX_LEFT_DEGREES)
+                : actualAngle % MAX_LEFT_DEGREES) * (actualAngle > MAX_LEFT_DEGREES ? -1 : 1);
     }
 }
