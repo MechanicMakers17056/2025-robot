@@ -9,13 +9,12 @@ import org.firstinspires.ftc.teamcode.teleop.button.PressAndReleaseButton;
 public class ThroughBoreEncoderTest extends RegistryLinearOpMode {
     // Encoder Through Voltage (doesn't work right): encoder.getVoltage() / encoder.getMaxVoltage() * 360;
 
-    public static final double ERROR_SPEED = 0.05;
+    public static final double ERROR_SPEED = 0.1;
     public static final int REVOLUTION_MARGIN = 8192 / 360;
-    private static final double SPEED = 0.5;
+    private static final double SPEED = 1;
     private static final int MAX_RIGHT_DEGREES = -180;
     private static final int MAX_LEFT_DEGREES = 180;
-    // minimum is 5 for error range
-    private static final int ERROR_RANGE = 5;
+    private static final int ERROR_RANGE = 3;
 
     private final PressAndReleaseButton increaseTargetAngleButton = new PressAndReleaseButton();
     private final PressAndReleaseButton decreaseTargetAngleButton = new PressAndReleaseButton();
@@ -30,24 +29,26 @@ public class ThroughBoreEncoderTest extends RegistryLinearOpMode {
         decreaseTargetAngleButton.tick(gamepad1.circle, () -> targetAngle--);
         moveToAngleButton.tick(gamepad1.triangle, () -> shouldMoveToAngle = !shouldMoveToAngle);
 
-        if (shouldMoveToAngle) {
+        int currentAngle = getScaledAngle(encoderMotor.getCurrentPosition());
+        telemetry.addData("Angle", currentAngle);
+        telemetry.addData("Target Angle", targetAngle);
+        telemetry.addData("Should Move", shouldMoveToAngle);
+        telemetry.addData("Speed", encoderServo.getPower());
+        telemetry.update();
+
+        if (gamepad1.left_stick_x == 0 && shouldMoveToAngle) {
             moveToAngle(targetAngle);
         } else {
-            encoderMotor.setPower(gamepad1.left_stick_x);
+            shouldMoveToAngle = false;
+            encoderServo.setPower(gamepad1.left_stick_x);
         }
-
-        int currentAngle = getScaledAngle(encoderMotor.getCurrentPosition());
-        telemetry.addData("Rotations", currentAngle);
-        telemetry.addData("Target Angle", targetAngle);
-        telemetry.update();
     }
 
     private void moveToAngle(int desiredAngle) {
         int currentAngle = getScaledAngle(encoderMotor.getCurrentPosition());
+
         if (currentAngle == desiredAngle) {
-            if (encoderMotor.getPower() < 0.05)
-                shouldMoveToAngle = false;
-            encoderMotor.setPower(0);
+            encoderServo.setPower(0);
             return;
         }
 
@@ -56,21 +57,21 @@ public class ThroughBoreEncoderTest extends RegistryLinearOpMode {
         boolean shouldMoveLeft = currentAngle > desiredAngle;
 
         if (negative == 1 ? shouldMoveRight : shouldMoveLeft) {
-            encoderMotor.setPower(SPEED * negative);
+            encoderServo.setPower(SPEED * negative);
         } else {
-            encoderMotor.setPower((Math.abs(Math.abs(desiredAngle) - Math.abs(currentAngle)) > ERROR_RANGE ? -SPEED : -ERROR_SPEED) * negative);
+            encoderServo.setPower((Math.abs(Math.abs(desiredAngle) - Math.abs(currentAngle)) > ERROR_RANGE ? -SPEED : -ERROR_SPEED) * negative);
         }
     }
 
     // doesn't work for new claw ):
-    // i did math for nothing
+    // i did math for noting
     private static int getSwerveAngle(int currentAngle, int desiredAngle) {
         int directAngle = (desiredAngle - currentAngle + 180) % 360 - 180;
         int reverseAngle = (desiredAngle - currentAngle + 360) % 360 - 180;
         return currentAngle + Math.abs(directAngle) <= Math.abs(reverseAngle) ? directAngle : reverseAngle;
     }
 
-    // converts the encoder rotations to [0, 360] format and then into a [0, 90, 180, -90] format
+    // converts the encoder rotations to [0, 360] format
     private static int getScaledAngle(int angle) {
         int actualAngle = angle / REVOLUTION_MARGIN;
         return actualAngle * -1;

@@ -2,10 +2,7 @@ package org.firstinspires.ftc.teamcode.registry_stuff.registry_hardware;
 
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoController;
-
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 public class RegistryCRServo implements CRServo {
     CRServo servo;
@@ -54,12 +51,6 @@ public class RegistryCRServo implements CRServo {
 
     @Override
     public void setPower(double power) {
-        if (servo != null)
-            servo.setPower(power);
-    }
-
-    public void setPower(double power, Telemetry telemetry) {
-        telemetry.addData("Speed " + _name, power);
         if (servo != null)
             servo.setPower(power);
     }

@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.registry_stuff;
 
+import static org.firstinspires.ftc.teamcode.registry_stuff.RegistryUtils.initCRServo;
 import static org.firstinspires.ftc.teamcode.registry_stuff.RegistryUtils.initMotor;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -9,6 +10,7 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 
 import org.firstinspires.ftc.teamcode.enums.Colors;
+import org.firstinspires.ftc.teamcode.registry_stuff.registry_hardware.RegistryCRServo;
 import org.firstinspires.ftc.teamcode.registry_stuff.registry_hardware.RegistryDcMotor;
 
 // Abstract class that serves as a base for linear op modes with common robot components such as basic movement methods and it also used to give access to all
@@ -16,6 +18,7 @@ import org.firstinspires.ftc.teamcode.registry_stuff.registry_hardware.RegistryD
 public abstract class RegistryLinearOpMode extends LinearOpMode {
     // Declare motors, servos and sensors
     public static RegistryDcMotor encoderMotor;
+    public static RegistryCRServo encoderServo;
     public static AnalogInput encoder;
     public static TouchSensor magnet;
 
@@ -43,8 +46,8 @@ public abstract class RegistryLinearOpMode extends LinearOpMode {
     private void initConfig() {
         RegistryUtils.setMap(hardwareMap);
 
-        encoder = hardwareMap.get(AnalogInput.class, "encoder");
         encoderMotor = initMotor("tm");
+        encoderServo = initCRServo("es");
 
 //        resetEncoder(encoderMotor);
     }
@@ -75,5 +78,8 @@ public abstract class RegistryLinearOpMode extends LinearOpMode {
         for (RegistryDcMotor motor : motors) {
             motor.setMode(mode);
         }
+    }
+    public void waitFor(double seconds) {
+        sleep((long) (seconds * 1000L));
     }
 }
