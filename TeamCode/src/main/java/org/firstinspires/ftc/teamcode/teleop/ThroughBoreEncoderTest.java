@@ -14,7 +14,8 @@ public class ThroughBoreEncoderTest extends RegistryLinearOpMode {
     private static final double SPEED = 0.5;
     private static final int MAX_RIGHT_DEGREES = -180;
     private static final int MAX_LEFT_DEGREES = 180;
-    private static final int ERROR_RANGE = 150;
+    // minimum is 5 for error range
+    private static final int ERROR_RANGE = 5;
 
     private final PressAndReleaseButton increaseTargetAngleButton = new PressAndReleaseButton();
     private final PressAndReleaseButton decreaseTargetAngleButton = new PressAndReleaseButton();
@@ -29,7 +30,7 @@ public class ThroughBoreEncoderTest extends RegistryLinearOpMode {
         decreaseTargetAngleButton.tick(gamepad1.circle, () -> targetAngle--);
         moveToAngleButton.tick(gamepad1.triangle, () -> shouldMoveToAngle = !shouldMoveToAngle);
 
-        if(shouldMoveToAngle) {
+        if (shouldMoveToAngle) {
             moveToAngle(targetAngle);
         } else {
             encoderMotor.setPower(gamepad1.left_stick_x);
@@ -44,12 +45,13 @@ public class ThroughBoreEncoderTest extends RegistryLinearOpMode {
     private void moveToAngle(int desiredAngle) {
         int currentAngle = getScaledAngle(encoderMotor.getCurrentPosition());
         if (currentAngle == desiredAngle) {
-            shouldMoveToAngle = false;
+            if (encoderMotor.getPower() < 0.05)
+                shouldMoveToAngle = false;
             encoderMotor.setPower(0);
             return;
         }
 
-        int negative = desiredAngle < 0 ? -1 : 1;
+        int negative = currentAngle < 0 ? -1 : 1;
         boolean shouldMoveRight = currentAngle < desiredAngle;
         boolean shouldMoveLeft = currentAngle > desiredAngle;
 
@@ -61,7 +63,7 @@ public class ThroughBoreEncoderTest extends RegistryLinearOpMode {
     }
 
     // doesn't work for new claw ):
-    // i did math for noting
+    // i did math for nothing
     private static int getSwerveAngle(int currentAngle, int desiredAngle) {
         int directAngle = (desiredAngle - currentAngle + 180) % 360 - 180;
         int reverseAngle = (desiredAngle - currentAngle + 360) % 360 - 180;
@@ -71,10 +73,6 @@ public class ThroughBoreEncoderTest extends RegistryLinearOpMode {
     // converts the encoder rotations to [0, 360] format and then into a [0, 90, 180, -90] format
     private static int getScaledAngle(int angle) {
         int actualAngle = angle / REVOLUTION_MARGIN;
-        return actualAngle == MAX_LEFT_DEGREES
-                ? MAX_LEFT_DEGREES
-                : (actualAngle > MAX_LEFT_DEGREES
-                ? (MAX_LEFT_DEGREES - actualAngle % MAX_LEFT_DEGREES)
-                : actualAngle % MAX_LEFT_DEGREES) * (actualAngle > MAX_LEFT_DEGREES ? -1 : 1);
+        return actualAngle * -1;
     }
 }
